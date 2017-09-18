@@ -1,42 +1,41 @@
-var Factory = require('factory-lady')
-  , Device = require('../app/models/devices/device');
+var Factory = require('factory-lady'),
+   Device = require('../app/models/devices/device');
 
-var async = require('async')
-  , server = require('../lib/server')
-  , mqtt = require('mqtt')
-  , ascoltatori = require('ascoltatori')
-  , chai = require('chai')
-  , expect = require('chai').expect
-  , sinon = require('sinon')
-  , debug = require('debug')('test');
+var async = require('async'),
+   server = require('../lib/server'),
+   mqtt = require('mqtt'),
+   chai = require('chai'),
+   expect = require('chai').expect,
+   sinon = require('sinon'),
+   debug = require('debug')('test');
 
 chai.use(require('sinon-chai'));
 chai.use(require('chai-fuzzy'));
 
 require('./factories/devices/device');
 
-var instance
-  , device
-  , ascoltatore = {
+var instance,
+   device,
+   ascoltatore = {
       type: 'mongo',
       uri: process.env.MONGOLAB_JOBS_HOST,
       db: process.env.MONGOLAB_JOBS_DB,
       pubsubCollection: 'mqtt',
-      mongo: {} }
-  , settings = {
+      mongo: {} },
+   settings = {
       port: process.env.PORT || 11884,
-      backend: ascoltatore }
-  , opts = {
+      backend: ascoltatore },
+   opts = {
       keepalive: 1000,
       clientId: 'mosca_' + require('crypto').randomBytes(16).toString('hex'),
       protocolId: 'MQIsdp',
       protocolVersion: 3 };
 
-var portCounter = 30042
-  , nextPort = function() {
-      settings.port = ++portCounter;
-    };
+var portCounter = 30042;
 
+function nextPort() {
+  settings.port = ++portCounter;
+}
 
 describe('MQTT client',function() {
 
