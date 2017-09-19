@@ -8,6 +8,7 @@
     "test": "make bail"
   },
   "dependencies": {
+    "amqp": "^0.2.6",
     "ascoltatori": "^4.1.0",
     "async": "^0.1.22",
     "bunyan": "^1.8.12",
