@@ -2,6 +2,7 @@ dependencies:
   amqp: 0.2.6
   ascoltatori: 4.1.0
   bunyan: 1.8.12
+  containerized: 1.0.2
   debug: 3.0.1
   dotenv: 4.0.0
   foreman: 2.0.0
@@ -459,6 +460,9 @@ packages:
     optional: true
     resolution:
       integrity: sha1-PXz0Rk22RG6mRL9LOVB/mFEAjo4=
+  /containerized/1.0.2:
+    resolution:
+      integrity: sha1-3+0xSeq1BC7wsG6FHH2PTcZ1DYg=
   /cookiejar/2.1.1:
     dev: true
     resolution:
@@ -2648,6 +2652,7 @@ specifiers:
   bunyan: ^1.8.12
   chai: ~4.1.2
   chai-fuzzy: ~1.6.1
+  containerized: ^1.0.2
   database-cleaner: ~1.2.0
   debug: ^3.0.1
   dotenv: ^4.0.0
