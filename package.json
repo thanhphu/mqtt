@@ -1,6 +1,6 @@
 {
   "name": "lelylan.mqtt",
-  "description": "Lelylan MQTT broket",
+  "description": "Lelylan MQTT broker",
   "version": "0.1.0",
   "author": "Lelylan Dev Team <dev@lelylan.com>",
   "scripts": {
@@ -23,8 +23,8 @@
     "request": "^2.81.0"
   },
   "engines": {
-    "node": "~0.10.x",
-    "npm": "~1.1.x"
+    "node": "~6.11.x",
+    "npm": "~3.10.x"
   },
   "devDependencies": {
     "async": "~2.5.0",
@@ -34,7 +34,7 @@
     "factory-lady": "~0.1.0",
     "mocha": "~3.5.3",
     "nock": "~9.0.14",
-    "sinon": "~3.2.1",
+    "sinon": "~3.3.0",
     "sinon-chai": "~2.13.0",
     "supertest": "~3.0.0"
   }
