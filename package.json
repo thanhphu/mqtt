@@ -1,8 +1,8 @@
 {
-  "name": "lelylan.mqtt",
-  "description": "Lelylan MQTT broker",
+  "name": "mqtt-mosca",
+  "description": "MQTT broker",
   "version": "0.1.0",
-  "author": "Lelylan Dev Team <dev@lelylan.com>",
+  "author": "Thanh Phu <nvtphu@gmail.com> <dev@lelylan.com>",
   "scripts": {
     "start": "node app.js",
     "test": "make bail"
