@@ -12,7 +12,7 @@ $ nf start
 ```
 
 ## Install with docker
-Docker image: [thanhphu/mosca](https://hub.docker.com/r/thanhphu/mosca/)
+Docker image: [thanhphu/mqtt-broker](https://hub.docker.com/r/thanhphu/mqtt-broker/)
 
 ### Use docker hub image
 ```bash
