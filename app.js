@@ -1,6 +1,5 @@
 require('dotenv').config();
 const server = require('./lib/server');
-const debug = require('debug')('lelylan');
 const containerized = require('containerized');
 
 var amqpHost = 'localhost';
@@ -14,7 +13,7 @@ var listener = {
   json: false,
   client: {
     host: amqpHost,
-    port: 5672,
+    port: process.env.AMQP_PORT || 5672,
     login: 'guest',
     password: 'guest'
   },
