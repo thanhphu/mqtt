@@ -12,7 +12,7 @@ var listener = {
   type: 'amqp',
   json: false,
   client: {
-    host: amqpHost,
+    host: process.env.AMQP_HOST || amqpHost,
     port: process.env.AMQP_PORT || 5672,
     login: 'guest',
     password: 'guest'
