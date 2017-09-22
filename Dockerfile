@@ -1,4 +1,4 @@
-FROM node:6
+FROM node:4
 LABEL maintainer="Thanh Phu"
 
 RUN apt-get update -qq \
