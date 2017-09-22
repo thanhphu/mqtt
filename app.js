@@ -24,6 +24,7 @@ var settings = {
   port: process.env.NODE_PORT || 1883,
   backend: listener
 };
+console.log('AMQP host: ', listener.client.host);
 
 var app = new server.start(settings);
 
