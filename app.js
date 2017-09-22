@@ -2,17 +2,21 @@ require('dotenv').config();
 const server = require('./lib/server');
 const containerized = require('containerized');
 
-var amqpHost = 'localhost';
+var amqpHost;
 
-if (containerized()) {
+if (process.env.AMQP_HOST) {
+  amqpHost = process.env.AMQP_HOST;
+} else if (containerized()) {
   amqpHost = '172.17.0.1';
+} else {
+  amqpHost = 'localhost';
 }
 
 var listener = {
   type: 'amqp',
   json: false,
   client: {
-    host: process.env.AMQP_HOST || amqpHost,
+    host: amqpHost,
     port: process.env.AMQP_PORT || 5672,
     login: 'guest',
     password: 'guest'
