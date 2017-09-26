@@ -13,22 +13,22 @@ if (process.env.AMQP_HOST) {
 }
 
 var listener = {
-  type: 'amqp',
-  json: false,
-  client: {
-    host: amqpHost,
-    port: process.env.AMQP_PORT || 5672,
-    login: 'guest',
-    password: 'guest'
-  },
-  amqp: require('amqp'),
-  exchange: 'mosca'
+  // type: 'amqp',
+  // json: false,
+  // client: {
+  //   host: amqpHost,
+  //   port: process.env.AMQP_PORT || 5672,
+  //   login: 'guest',
+  //   password: 'guest'
+  // },
+  // amqp: require('amqp'),
+  // exchange: 'mosca'
 };
 var settings = {
   port: process.env.NODE_PORT || 1883,
   backend: listener
 };
-console.log('AMQP host: ', listener.client.host);
+// console.log('AMQP host: ', listener.client.host);
 
 var app = new server.start(settings);
 
