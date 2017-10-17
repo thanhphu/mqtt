@@ -9,7 +9,7 @@ if (process.env.KAFKA_HOST) {
 } else if (containerized()) {
   kafkaHosts = '172.17.0.1:2181';
 } else {
-  kafkaHosts = 'localhost:32773,localhost:32772,localhost:32771';
+  kafkaHosts = 'localhost:2181,localhost:2182,localhost:2183';
 }
 
 var listener = {
