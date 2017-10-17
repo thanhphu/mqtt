@@ -2,33 +2,44 @@ require('dotenv').config();
 const server = require('./lib/server');
 const containerized = require('containerized');
 
-var amqpHost;
+var kafkaHosts;
 
-if (process.env.AMQP_HOST) {
-  amqpHost = process.env.AMQP_HOST;
+if (process.env.KAFKA_HOST) {
+  kafkaHosts = process.env.KAFKA_HOST;
 } else if (containerized()) {
-  amqpHost = '172.17.0.1';
+  kafkaHosts = '172.17.0.1:2181';
 } else {
-  amqpHost = 'localhost';
+  kafkaHosts = 'localhost:32773,localhost:32772,localhost:32771';
 }
 
 var listener = {
-  type: 'amqp',
+  type: 'kafka',
   json: false,
-  client: {
-    host: amqpHost,
-    port: process.env.AMQP_PORT || 5672,
-    login: 'guest',
-    password: 'guest'
-  },
-  amqp: require('amqp'),
-  exchange: 'mosca'
+  connectionString: kafkaHosts,
+  clientId: 'mosca',
+  groupId: 'mosca',
+  defaultEncoding: 'utf8',
+  encodings: {
+    'spiddal-adcp': 'buffer'
+  }
 };
 var settings = {
   port: process.env.NODE_PORT || 1883,
-  backend: listener
+  backend: listener,
+
+  id: 'mosca',
+
+  /*
+  * avoid publishing to $SYS topics because
+  * it violates kafka topic naming convention
+  */
+  stats: false,
+  publishNewClient: false,
+  publishClientDisconnect: false,
+  publishSubscriptions: false
 };
-console.log('AMQP host: ', listener.client.host);
+
+console.log('Kafka host: ', listener.connectionString);
 
 var app = new server.start(settings);
 
