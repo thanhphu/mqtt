@@ -7,9 +7,13 @@ var amqpHost;
 if (process.env.AMQP_HOST) {
   amqpHost = process.env.AMQP_HOST;
 } else if (containerized()) {
-  amqpHost = '172.17.0.1';
+  amqpHost = ['amqp://guest:guest@172.17.0.1:5672'];
 } else {
-  amqpHost = 'localhost';
+  amqpHost = [
+    'amqp://guest:guest@localhost:5672',
+    'amqp://guest:guest@localhost:5673',
+    'amqp://guest:guest@localhost:5674'
+  ];
 }
 
 var listener = {
@@ -17,7 +21,6 @@ var listener = {
   json: false,
   client: {
     host: amqpHost,
-    port: process.env.AMQP_PORT || 5672,
     login: 'guest',
     password: 'guest'
   },
@@ -32,12 +35,16 @@ console.log('AMQP host: ', listener.client.host);
 
 var app = new server.start(settings);
 
+app.on('error', function(err) {
+  console.log('Error: ', err);
+});
+
 app.on('published', function (packet, client) {
   if (packet.topic.indexOf('$SYS') === 0) return; // doesn't print stats info
   console.log('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
 });
 
-app.on('ready', function () {
+app.on('ready', function (mh) {
   console.log('MQTT Server listening on port', settings.port);
 });
 
