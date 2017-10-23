@@ -1,4 +1,5 @@
 require('dotenv').config();
+const mosca = require('mosca');
 const server = require('./lib/server');
 const containerized = require('containerized');
 
@@ -29,7 +30,11 @@ var listener = {
 };
 var settings = {
   port: process.env.NODE_PORT || 1883,
-  backend: listener
+  backend: listener,
+  persistence: {
+    factory: mosca.persistence.Redis,
+    host: "redis1",
+  }
 };
 console.log('AMQP host: ', listener.client.host);
 
