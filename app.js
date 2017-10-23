@@ -11,9 +11,7 @@ if (process.env.AMQP_HOST) {
   amqpHost = ['amqp://guest:guest@172.17.0.1:5672'];
 } else {
   amqpHost = [
-    'amqp://guest:guest@localhost:5672',
-    'amqp://guest:guest@localhost:5673',
-    'amqp://guest:guest@localhost:5674'
+    'amqp://guest:guest@localhost:5672'
   ];
 }
 
@@ -33,7 +31,8 @@ var settings = {
   backend: listener,
   persistence: {
     factory: mosca.persistence.Redis,
-    host: "redis1",
+    host: "localhost",
+    port: 6379
   }
 };
 console.log('AMQP host: ', listener.client.host);
