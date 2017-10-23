@@ -1,9 +1,18 @@
 require('dotenv').config();
+const mosca = require('mosca');
 const server = require('./lib/server');
 const containerized = require('containerized');
 
-var amqpHost;
+var redisHost;
+if (process.env.REDIS_HOST) {
+  redisHost = process.env.REDIS_HOST;
+} else if (containerized()) {
+  redisHost = '172.17.0.1';
+} else {
+  redisHost = 'localhost';
+}
 
+var amqpHost;
 if (process.env.AMQP_HOST) {
   amqpHost = process.env.AMQP_HOST;
 } else if (containerized()) {
@@ -29,7 +38,12 @@ var listener = {
 };
 var settings = {
   port: process.env.NODE_PORT || 1883,
-  backend: listener
+  backend: listener,
+  persistence: {
+    factory: mosca.persistence.Redis,
+    host: redisHost,
+    port: 6379
+  }
 };
 console.log('AMQP host: ', listener.client.host);
 
