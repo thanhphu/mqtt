@@ -10,8 +10,8 @@ const request = require('request');
  *    'subscriber': when called from collector
  * connect: connection callback, takes one parameter - hostname of selected node
  */
-module.exports.selectRabbit = function (hosts, type, connect) {   
-    var onceConnect = _.once(connect);
+module.exports.selectRabbit = function (hosts, type, success, failure) {   
+    var onceConnect = _.once(success);
     
     function _selectLeastConnectedNode(allCount, typeCount) {
         // Add back nodes with zero connections
@@ -85,8 +85,10 @@ module.exports.selectRabbit = function (hosts, type, connect) {
                 }
             });
         });
+        if (!found && failure) {
+            failure();
+        }
     }
-
 
     _getNodesInfo(hosts, type);
 };

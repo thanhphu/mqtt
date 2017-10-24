@@ -74,6 +74,9 @@ rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
   };
   console.log('AMQP host:', listener.client.host);
   startApp(settings);
+}, () => {
+  // Can't communicate with rabbitMQ, try to restart
+  process.exit(1);
 });
 
 
