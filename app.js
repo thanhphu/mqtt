@@ -1,34 +1,52 @@
+'use strict';
 require('dotenv').config();
 const mosca = require('mosca');
 const server = require('./lib/server');
 const rabbitHelper = require('./rabbit-helper.js');
 const containerized = require('containerized');
 
-rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
-  var redisHost;
-  if (process.env.REDIS_HOST) {
-    redisHost = process.env.REDIS_HOST;
-  } else if (containerized()) {
-    redisHost = '172.17.0.1';
-  } else {
-    redisHost = 'localhost';
-  }
+function startApp(settings) {
+  var app = new server.start(settings);
   
-  var amqpHosts;
-  if (process.env.AMQP_HOST) {
-    amqpHosts = [process.env.AMQP_HOST];
-  } else if (containerized()) {
-    amqpHosts = [
-      'rabbit1',
-      'rabbit2',
-      'rabbit3'
-    ];
-  } else {
-    amqpHosts = [
-      'localhost'
-    ];
-  }
+  app.on('error', function(err) {
+    console.log('Error: ', err);
+  });
+  
+  app.on('published', function (packet, client) {
+    if (packet.topic.indexOf('$SYS') === 0) return; // doesn't print stats info
+    console.log('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
+  });
+  
+  app.on('ready', function (mh) {
+    console.log('MQTT Server listening on port', settings.port);
+  });  
+}
 
+var redisHost;
+if (process.env.REDIS_HOST) {
+  redisHost = process.env.REDIS_HOST;
+} else if (containerized()) {
+  redisHost = '172.17.0.1';
+} else {
+  redisHost = 'localhost';
+}
+
+var amqpHosts;
+if (process.env.AMQP_HOST) {
+  amqpHosts = [process.env.AMQP_HOST];
+} else if (containerized()) {
+  amqpHosts = [
+    'rabbit1',
+    'rabbit2',
+    'rabbit3'
+  ];
+} else {
+  amqpHosts = [
+    'localhost'
+  ];
+}
+
+rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {  
   var listener = {
     type: 'amqp',
     json: false,
@@ -54,19 +72,4 @@ rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
   startApp(settings);
 });
 
-function startApp(settings) {
-  var app = new server.start(settings);
-  
-  app.on('error', function(err) {
-    console.log('Error: ', err);
-  });
-  
-  app.on('published', function (packet, client) {
-    if (packet.topic.indexOf('$SYS') === 0) return; // doesn't print stats info
-    console.log('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
-  });
-  
-  app.on('ready', function (mh) {
-    console.log('MQTT Server listening on port', settings.port);
-  });  
-}
+
