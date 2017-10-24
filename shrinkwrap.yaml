@@ -556,6 +556,8 @@ packages:
     resolution:
       integrity: sha512-MKPHZDMB0o6yHyDryUOScqZibp914ksXwAMYMTHj6KO8UeKsRYNJD3oNCKjTqZon+V488P7N/HzXF8t7ZR95ww==
   /dotenv/4.0.0:
+    engines:
+      node: '>=4.6.0'
     resolution:
       integrity: sha1-hk7xN5rO1Vzm+V3r7NzhefegzR0=
   /double-ended-queue/2.1.0-0:

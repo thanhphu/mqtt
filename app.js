@@ -78,6 +78,9 @@ function init() {
   });
 }
 
-setTimeout(init, 8000);
-
+if (containerized()) {
+  setTimeout(init, 8000);
+} else {
+  init();
+}
 
