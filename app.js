@@ -48,12 +48,14 @@ if (process.env.AMQP_HOST) {
   ];
 }
 
-rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {  
+console.log('Config AMQP hosts:', amqpHosts);
+rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
   var listener = {
     type: 'amqp',
     json: false,
     client: {
       host: selectedNode,
+      port: 5672,
       login: 'guest',
       password: 'guest'
     },

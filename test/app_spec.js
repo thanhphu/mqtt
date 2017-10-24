@@ -1,3 +1,4 @@
+'use strict';
 var Factory = require('factory-lady'),
    Device = require('../app/models/devices/device');
 

@@ -11,7 +11,7 @@ const request = require('request');
  * connect: connection callback, takes one parameter - hostname of selected node
  */
 module.exports.selectRabbit = function (hosts, type, connect) {   
-
+    var onceConnect = _.once(connect);
     
     function _selectLeastConnectedNode(allCount, typeCount) {
         // Add back nodes with zero connections
@@ -56,10 +56,10 @@ module.exports.selectRabbit = function (hosts, type, connect) {
 
             var leastConnectedNode = _selectLeastConnectedNode(allCount, typeCount);
             var leastConnectedNodeName = _extractHostName(leastConnectedNode);
-            connect(leastConnectedNodeName);
+            onceConnect(leastConnectedNodeName);
         } else {
             // Nothing from API, connects to a random node
-            connect(hosts[_.random(0, hosts.length - 1)]);
+            onceConnect(hosts[_.random(0, hosts.length - 1)]);
         }
     }
 
@@ -86,6 +86,7 @@ module.exports.selectRabbit = function (hosts, type, connect) {
             });
         });
     }
+
 
     _getNodesInfo(hosts, type);
 };
