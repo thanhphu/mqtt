@@ -78,6 +78,6 @@ function init() {
   });
 }
 
-setTimeout(init, 10000);
+setTimeout(init, 8000);
 
 
