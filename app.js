@@ -12,12 +12,14 @@ function startApp(settings) {
     console.log('Error: ', err);
   });
   
-  app.on('published', function (packet, client) {
-    if (packet.topic.indexOf('$SYS') === 0) return; // doesn't print stats info
+  app.on('published', function (packet) {
+    if (packet.topic.indexOf('$SYS') === 0) {
+      return; // doesn't print stats info 
+    }
     console.log('ON PUBLISHED', packet.payload.toString(), 'on topic', packet.topic);
   });
   
-  app.on('ready', function (mh) {
+  app.on('ready', function () {
     console.log('MQTT Server listening on port', settings.port);
   });  
 }
@@ -33,7 +35,7 @@ if (process.env.REDIS_HOST) {
 
 var amqpHosts;
 if (process.env.AMQP_HOST) {
-  amqpHosts = [process.env.AMQP_HOST];
+  amqpHosts = process.env.AMQP_HOST.split(',');
 } else if (containerized()) {
   amqpHosts = [
     'rabbit1',
