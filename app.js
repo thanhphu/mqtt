@@ -48,35 +48,36 @@ if (process.env.AMQP_HOST) {
   ];
 }
 
-console.log('Config AMQP hosts:', amqpHosts);
-rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
-  var listener = {
-    type: 'amqp',
-    json: false,
-    client: {
-      host: selectedNode,
-      port: 5672,
-      login: 'guest',
-      password: 'guest'
-    },
-    amqp: require('amqp'),
-    exchange: 'mosca'
-  };
-  
-  var settings = {
-    port: process.env.NODE_PORT || 1883,
-    backend: listener,
-    persistence: {
-      factory: mosca.persistence.Redis,
-      host: redisHost,
-      port: 6379
-    }
-  };
-  console.log('AMQP host:', listener.client.host);
-  startApp(settings);
-}, () => {
-  // Can't communicate with rabbitMQ, try to restart
-  process.exit(1);
-});
+function init() {
+  console.log('Config AMQP hosts:', amqpHosts);
+  rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
+    var listener = {
+      type: 'amqp',
+      json: false,
+      client: {
+        host: selectedNode,
+        port: 5672,
+        login: 'guest',
+        password: 'guest'
+      },
+      amqp: require('amqp'),
+      exchange: 'mosca'
+    };
+    
+    var settings = {
+      port: process.env.NODE_PORT || 1883,
+      backend: listener,
+      persistence: {
+        factory: mosca.persistence.Redis,
+        host: redisHost,
+        port: 6379
+      }
+    };
+    console.log('AMQP host:', listener.client.host);
+    startApp(settings);
+  });
+}
+
+setTimeout(init, 10000);
 
 
