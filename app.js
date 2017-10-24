@@ -4,31 +4,31 @@ const server = require('./lib/server');
 const rabbitHelper = require('./rabbit-helper.js');
 const containerized = require('containerized');
 
-var redisHost;
-if (process.env.REDIS_HOST) {
-  redisHost = process.env.REDIS_HOST;
-} else if (containerized()) {
-  redisHost = '172.17.0.1';
-} else {
-  redisHost = 'localhost';
-}
-
-var amqpHosts;
-if (process.env.AMQP_HOST) {
-  amqpHosts = [process.env.AMQP_HOST];
-} else if (containerized()) {
-  amqpHosts = [
-    'rabbit1',
-    'rabbit2',
-    'rabbit3'
-  ];
-} else {
-  amqpHosts = [
-    'localhost'
-  ];
-}
-
 rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
+  var redisHost;
+  if (process.env.REDIS_HOST) {
+    redisHost = process.env.REDIS_HOST;
+  } else if (containerized()) {
+    redisHost = '172.17.0.1';
+  } else {
+    redisHost = 'localhost';
+  }
+  
+  var amqpHosts;
+  if (process.env.AMQP_HOST) {
+    amqpHosts = [process.env.AMQP_HOST];
+  } else if (containerized()) {
+    amqpHosts = [
+      'rabbit1',
+      'rabbit2',
+      'rabbit3'
+    ];
+  } else {
+    amqpHosts = [
+      'localhost'
+    ];
+  }
+
   var listener = {
     type: 'amqp',
     json: false,
@@ -40,6 +40,7 @@ rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
     amqp: require('amqp'),
     exchange: 'mosca'
   };
+  
   var settings = {
     port: process.env.NODE_PORT || 1883,
     backend: listener,
@@ -49,9 +50,13 @@ rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
       port: 6379
     }
   };
-  console.log('AMQP host: ', listener.client.host);
-  var app = new server.start(settings);
+  console.log('AMQP host:', listener.client.host);
+  startApp(settings);
+});
 
+function startApp(settings) {
+  var app = new server.start(settings);
+  
   app.on('error', function(err) {
     console.log('Error: ', err);
   });
@@ -64,4 +69,4 @@ rabbitHelper.selectRabbit(amqpHosts, 'publisher', (selectedNode) => {
   app.on('ready', function (mh) {
     console.log('MQTT Server listening on port', settings.port);
   });  
-});
+}

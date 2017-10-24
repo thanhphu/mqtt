@@ -8,64 +8,40 @@ const async = require('async');
  * type: type of least connection to select, available types:
  *    'publisher': when called from mosca
  *    'subscriber': when called from collector
+ * connect: connection callback, takes one parameter - hostname of selected node
  */
-module.exports.selectRabbit = function(hosts, type, done) {
+module.exports.selectRabbit = function (hosts, type, connect) {
+    _getNodesInfo(hosts, 'subscriber');
+
     function _callQueueApi(host, cb) {
         const url = `http://guest:guest@${host}:15672/api/queues`;
         request({
             url: url,
             json: true
-        }, function(error, response, body) {
+        }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
                 cb(body);
-            } else {
-                cb();
             }
         });
     }
     
-    function _getNodesInfo(hosts, type, cb) {
-        _.forEach(hosts, (host) => {
+    function _getNodesInfo(hosts, type) {
+        var found = false;
+        _.each(hosts, (host) => {
             _callQueueApi(host, (body) => {
-                if (body) {
-                    cb(body, type);
+                if (body && !found) {
+                    _selectNode(body, type);
+                    found = true;
                 }
             });
         });
-        cb();
     }
-    
-    function _selectLeastConnectedNode(allCount, typeCount) {
-        // Add back nodes with zero connections
-        var leastConnectionCount, leastConnectedNode;
-        _.forEach(allCount, (value, key) => {
-            
-            if (!typeCount[key]) {
-                typeCount[key] = 0;
-            }
-    
-            // Select node with least connections
-            if (leastConnectionCount === undefined) {
-                leastConnectionCount = value;
-            }
 
-            if (leastConnectionCount >= typeCount[key]) {
-                leastConnectionCount = typeCount[key];
-                leastConnectedNode = key;
-            }
-        });
-        return leastConnectedNode;
-    }
-    
-    function _extractNodeName(longNodeName) {
-        return longNodeName.split('@')[1];
-    }
-    
     function _selectNode(nodesInfo, type) {
         if (nodesInfo) {
             // Count of all types of conection to all nodes
             // Example: Object {rabbit@rabbit1: 2, rabbit@rabbit2: 1, rabbit@rabbit3: 1}
-            var allCount = _.countBy(nodesInfo, (node) => node.node); 
+            var allCount = _.countBy(nodesInfo, (node) => node.node);
             if (type === 'publisher') {
                 // Mosca makes non-durable queues, keep durable queues
                 _.remove(nodesInfo, (node) => node.durable == true);
@@ -75,13 +51,36 @@ module.exports.selectRabbit = function(hosts, type, done) {
             }
             // Count of only the connection type we want
             var typeCount = _.countBy(nodesInfo, (node) => node.node);
-    
+
             var leastConnectedNode = _selectLeastConnectedNode(allCount, typeCount);
-            var leastConnectedNodeName = _extractNodeName(leastConnectedNode);
-            done(leastConnectedNodeName);
+            var leastConnectedNodeName = _extractHostName(leastConnectedNode);
+            connect(leastConnectedNodeName);
         }
     }
+    
+    function _selectLeastConnectedNode(allCount, typeCount) {
+        // Add back nodes with zero connections
+        var leastConnectedCount, leastConnectedNode;
+        _.forEach(allCount, (value, key) => {
+            
+            if (!typeCount[key]) {
+                typeCount[key] = 0;
+            }
 
-    _getNodesInfo(hosts, 'subscriber', _selectNode);
-    return `amqp://guest:guest@${hosts[_.random(0, hosts.length - 1)]}:5672`;
+            // Select node with least connections
+            if (leastConnectedCount === undefined) {
+                leastConnectedCount = value;
+            }
+
+            if (leastConnectedCount >= typeCount[key]) {
+                leastConnectedCount = typeCount[key];
+                leastConnectedNode = key;
+            }
+        });
+        return leastConnectedNode;
+    }
+
+    function _extractHostName(longNodeName) {
+        return longNodeName.split('@')[1];
+    }
 };
