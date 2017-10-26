@@ -4,6 +4,7 @@ require('dotenv').config();
 const _ = require('lodash');
 const request = require('request');
 const async = require('async');
+const storage = require('node-persist');
 
 const rabbitUsername = process.env.RABBIT_USERNAME || 'guest';
 const rabbitPassword = process.env.RABBIT_PASSWORD || 'guest';
@@ -12,49 +13,73 @@ function extractHostName(longNodeName) {
   return longNodeName.split('@')[1];
 }
 
-function anyItem(arr) {
-  return arr[_.random(0, arr.length - 1)];
-}
-
-function selectNode(hosts, queueInfoList, nodeInfoList, type) {
+function selectNode(hosts, queueInfoList, nodeInfoList, connectionInfoList, type, shouldReturnArray) {
   if (_.isEmpty(nodeInfoList)) {
     // Nothing from API, connects to a random node
-    return (anyItem(hosts));
+    return (_.sample(hosts));
   } else if (_.isEmpty(queueInfoList)) {
-    let nodeNames = _.uniq(_.map(nodeInfoList, extractHostName));
-    return (anyItem(nodeNames));
+    let nodeNames = _.uniq(_.map(nodeInfoList, n => extractHostName(n.name)));
+    return (_.sample(nodeNames));
   } else {
-    // Count of all types of conection to all nodes
+    // List of all alive nodes
     // nodesCount example: ['rabbit@rabbit1', 'rabbit@rabbit2', 'rabbit@rabbit3']
     let nodeNames = _.uniq(_.map(nodeInfoList, node => node.name));
+
+    // Persist list of nodes for next time
+    storage.setItem('hosts', _.map(nodeNames, extractHostName));
+
+    let finalCount;
     if (type === 'publisher') {
       // Mosca makes non-durable queues, keep durable queues
       _.remove(queueInfoList, node => node.durable === true);
+      // queueCount example: Object {rabbit@rabbit1: 2, rabbit@rabbit2: 1, rabbit@rabbit3: 3}
+      let queueCount = _.countBy(queueInfoList, node => node.node);
+      // Add nodes with zero queues
+      _.forEach(nodeNames, nodeName => {
+        if (!queueCount[nodeName]) {
+          queueCount[nodeName] = 0;
+        }
+      });
+      finalCount = queueCount;
     } else {
-      // We use durable queues in consumers
-      _.remove(queueInfoList, node => node.durable === false);
+      // Subscriber logic
+      // connectionCount example: Object {rabbit@rabbit1: 2, rabbit@rabbit2: 1, rabbit@rabbit3: 3}
+      let connectionCount = _.countBy(connectionInfoList, node => node.node);  
+      // Add nodes with zero connections
+      _.forEach(nodeNames, nodeName => {
+        if (!connectionCount[nodeName]) {
+          connectionCount[nodeName] = 0;
+        }
+      });
+      finalCount = connectionCount;
     }
-    // queueCount example: Object {rabbit@rabbit1: 2, rabbit@rabbit2: 1, rabbit@rabbit3: 3}
-    let queueCount = _.countBy(queueInfoList, node => node.node);
-    // Add nodes with zero queues
-    _.forEach(nodeNames, nodeName => {
-      if (!queueCount[nodeName]) {
-        queueCount[nodeName] = 0;
-      }
+
+    let finalCountArr = _.map(finalCount, (count, name) => {
+      return { name, count };
     });
 
-    let queueCountArr = _.map(queueCount, (count, name) => { return { name, count } });
-    let leastConnectedNode = _.sortBy(queueCountArr, 'count')[0].name;
-
-    let leastConnectedNodeName = extractHostName(leastConnectedNode);
-    return leastConnectedNodeName;
+    let nodesSortedByPrority = _.sortBy(finalCountArr, 'count');
+    let result;
+    if (shouldReturnArray) {
+      result = _.map(nodesSortedByPrority, node => extractHostName(node.name));
+    } else {
+      let leastConnectedNode = nodesSortedByPrority[0].name;
+      result = extractHostName(leastConnectedNode);
+    }
+    return result;
   }
 }
 
 function callApi(url, host, cb) {
   request({
     url: url,
-    json: true
+    json: true,
+    auth: {
+      user: rabbitUsername,
+      pass: rabbitPassword,
+      sendImmediately: false
+    },
+    timeout: 3000 // 3 secs
   }, function (error, response, body) {
     if (!error && response.statusCode === 200) {
       cb(null, body);
@@ -65,37 +90,57 @@ function callApi(url, host, cb) {
 }
 
 function callQueueApi(host, cb) {
-  const url = `http://${rabbitUsername}:${rabbitPassword}@${host}:15672/api/queues`;
+  const url = `http://${host}:15672/api/queues`;
   callApi(url, host, cb);
 }
 
 function callNodesApi(host, cb) {
-  const url = `http://${rabbitUsername}:${rabbitPassword}@${host}:15672/api/nodes`;
+  const url = `http://${host}:15672/api/nodes`;
   callApi(url, host, cb);
 }
 
-function getQueueAndNodeInfo(hosts, type, onceSuccessCb, failureCb) {
-  async.some(hosts, (host, someCallback) => {
-    async.waterfall([
-      (callback) => {
-        callQueueApi(host, (err, queueInfoList) => callback(err, queueInfoList));
-      },
-      (queueInfoList, callback) => {
-        callNodesApi(host, (err, nodeInfoList) => callback(err, queueInfoList, nodeInfoList));
-      },
-      (queueInfoList, nodeInfoList, callback) => {
-        let selectedHost = selectNode(hosts, queueInfoList, nodeInfoList, type);
-        onceSuccessCb(selectedHost);
-        callback(null);
-      }
-    ], (err) => {
-      someCallback(null, !err);
+function callConnectionsApi(host, cb) {
+  const url = `http://${host}:15672/api/connections`;
+  callApi(url, host, cb);
+}
+
+function getQueueAndNodeInfo(configHosts, type, onceSuccessCb, failureCb, shouldReturnArray) {
+  // console.log('Loading persistence');
+  storage.init().then(() => {
+    storage.getItem('hosts').then((savedHosts) => {
+      // console.log('Persistence loaded, savedHosts:', savedHosts);
+      let mergedHosts = _.union(savedHosts, configHosts);
+      async.someLimit(mergedHosts, 1, (host, someCallback) => {
+        async.waterfall([
+          (callback) => {
+            // console.log('querying queue, host', host);
+            callQueueApi(host, (err, queueInfoList) => callback(err, queueInfoList));
+          },
+          (queueInfoList, callback) => {
+            // console.log('querying nodes');
+            callNodesApi(host, (err, nodeInfoList) => callback(err, queueInfoList, nodeInfoList));
+          },
+          (queueInfoList, nodeInfoList, callback) => {
+            // console.log('querying connections');
+            callConnectionsApi(host, (err, connectionInfoList) => callback(err, queueInfoList, nodeInfoList, connectionInfoList));
+          },
+          (queueInfoList, nodeInfoList, connectionInfoList, callback) => {
+            let selectedHost = selectNode(configHosts, queueInfoList, nodeInfoList, connectionInfoList, type, shouldReturnArray);
+            // console.log('Node selected:', selectedHost);
+            onceSuccessCb(selectedHost);
+            callback(null);
+          }
+        ], (err) => {
+          someCallback(null, !err);
+        });
+      }, (err, result) => {
+        if ((err || !result) && failureCb) {
+          failureCb(err);
+        }
+      });    
     });
-  }, (err, result) => {
-    if ((err || !result) && failureCb) {
-      failureCb(err);
-    }
   });
+  
 }
 
 /**
@@ -104,8 +149,18 @@ function getQueueAndNodeInfo(hosts, type, onceSuccessCb, failureCb) {
  *    'publisher': when called from mosca
  *    'subscriber': when called from collector
  * success: connection callback, takes one parameter - hostname of selected node
+ * 
+ * Returns the node that currently have the least connection of the specified type
  */
 module.exports.selectRabbit = function (hosts, type, successCb, failureCb) {
   let onceSuccessCb = _.once(successCb);
-  getQueueAndNodeInfo(hosts, type, onceSuccessCb, failureCb);
+  getQueueAndNodeInfo(hosts, type, onceSuccessCb, failureCb, false);
+};
+
+/**
+ * Returns a of rabbit nodes sorted by connections from few to many
+ */
+module.exports.selectRabbits = function (hosts, type, successCb, failureCb) {
+  let onceSuccessCb = _.once(successCb);
+  getQueueAndNodeInfo(hosts, type, onceSuccessCb, failureCb, true);
 };

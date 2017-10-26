@@ -11,6 +11,7 @@ dependencies:
   mongoose: 4.11.11
   mosca: 2.5.2
   mqtt: 2.13.0
+  node-persist: 2.1.0
   redis: 2.8.0
   request: 2.81.0
 devDependencies:
@@ -1072,6 +1073,8 @@ packages:
     dependencies:
       is-relative: 0.2.1
       is-windows: 0.2.0
+    engines:
+      node: '>=0.10.0'
     resolution:
       integrity: sha1-IN5p89uULvLYe5wto28XIjWxtes=
   /is-extendable/0.1.1:
@@ -1097,6 +1100,8 @@ packages:
   /is-relative/0.2.1:
     dependencies:
       is-unc-path: 0.1.2
+    engines:
+      node: '>=0.10.0'
     resolution:
       integrity: sha1-0n9MfVFtF1+2ENuEu+7yPDvJeqU=
   /is-typedarray/1.0.0:
@@ -1105,9 +1110,13 @@ packages:
   /is-unc-path/0.1.2:
     dependencies:
       unc-path-regex: 0.1.2
+    engines:
+      node: '>=0.10.0'
     resolution:
       integrity: sha1-arBTpyVzwQJQ/0FqOBTDUXivObk=
   /is-windows/0.2.0:
+    engines:
+      node: '>=0.10.0'
     resolution:
       integrity: sha1-3hqm1j6indJIc3tp8f+LgALSEIw=
   /isarray/0.0.1:
@@ -1734,6 +1743,13 @@ packages:
     optional: true
     resolution:
       integrity: sha1-IKCeV7kuLfWRmT1L8JisPnJwYrY=
+  /node-persist/2.1.0:
+    dependencies:
+      is-absolute: 0.2.6
+      mkdirp: 0.5.1
+      q: 1.1.2
+    resolution:
+      integrity: sha1-5lK784haBNrWo1PXQXYXfIORRwc=
   /node-uuid/1.4.8:
     resolution:
       integrity: sha1-sEDrCSOWivq/jTL7HxfxFn/auQc=
@@ -1970,6 +1986,12 @@ packages:
   /punycode/1.4.1:
     resolution:
       integrity: sha1-wNWmOycYgArY4esPpSachN1BhF4=
+  /q/1.1.2:
+    engines:
+      node: '>=0.6.0'
+      teleport: '>=0.2.0'
+    resolution:
+      integrity: sha1-Y1fikSBnAdmfGXq4TlforRlvKok=
   /qlobber-fsq/3.2.4:
     dependencies:
       async: 1.5.2
@@ -2522,6 +2544,8 @@ packages:
     resolution:
       integrity: sha1-sHoualQagV/Go0zNRTO67DB8qGQ=
   /unc-path-regex/0.1.2:
+    engines:
+      node: '>=0.10.0'
     resolution:
       integrity: sha1-5z3T17DXxe2G+6xrCufYxqadUPo=
   /underscore/1.4.4:
@@ -2668,6 +2692,7 @@ specifiers:
   mosca: ^2.5.2
   mqtt: ~2.13.0
   nock: ~9.0.14
+  node-persist: ^2.1.0
   redis: ^2.8.0
   request: ^2.81.0
   sinon: ~3.2.1

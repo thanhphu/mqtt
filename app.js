@@ -75,12 +75,8 @@ function init() {
     };
     console.log('AMQP host:', listener.client.host);
     startApp(settings);
-  });
+  }, () => process.exit(1));
 }
 
-if (containerized()) {
-  setTimeout(init, 8000);
-} else {
-  init();
-}
+init();
 
