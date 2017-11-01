@@ -6,7 +6,6 @@
                 "request": "launch",
                 "name": "Launch Program",
                 "env": {
-                    "REDIS_PORT": "1886"
                 },
                 "program": "${workspaceRoot}/app.js"
             }
