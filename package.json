@@ -2,7 +2,11 @@
   "name": "mqtt-mosca",
   "description": "MQTT broker",
   "version": "0.1.0",
-  "author": "Thanh Phu <nvtphu@gmail.com> <dev@lelylan.com>",
+  "author": "Thanh Phu <nvtphu@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thanhphu/mqtt-broker"
+  },
   "scripts": {
     "start": "node app.js",
     "test": "make bail"
