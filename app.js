@@ -70,7 +70,7 @@ function init() {
       persistence: {
         factory: mosca.persistence.Redis,
         host: redisHost,
-        port: 6379
+        port: process.env.REDIS_PORT || 6379
       }
     };
     console.log('AMQP host:', listener.client.host);
